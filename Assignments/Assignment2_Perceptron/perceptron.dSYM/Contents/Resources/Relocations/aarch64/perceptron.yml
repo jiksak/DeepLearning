@@ -1,0 +1,5 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     '/Users/jaleelali/jiksa/Cusat-Sem4/DeepLearning/Assignments/Assignment2_Perceptron/perceptron'
+relocations:     []
+...

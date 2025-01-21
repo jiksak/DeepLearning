@@ -12,18 +12,17 @@ struct Perceptron {
     float bias;            // Bias term
 };
 
-// Function to initialize perceptron weights and bias randomly
 void initialize_perceptron(Perceptron &perceptron, int num_features) {
-    srand(static_cast<unsigned>(time(0))); // random number generation
+    srand(static_cast<unsigned>(time(0))); // Random number generation
     perceptron.weights.resize(num_features);
 
     // Random initialization of weights
     for (float &weight : perceptron.weights) {
-        weight = static_cast<float>(rand()) / RAND_MAX; // Random float between 0 and 1
+        weight = static_cast<float>(rand()) / (static_cast<float>(RAND_MAX) * 10); // Smaller random values
     }
 
     // Random initialization of bias
-    perceptron.bias = static_cast<float>(rand()) / RAND_MAX; // Random float between 0 and 1
+    perceptron.bias = static_cast<float>(rand()) / (static_cast<float>(RAND_MAX) * 10); // Smaller random value
 }
 
 // Activation function (step function)
@@ -43,11 +42,14 @@ float dot_product(const vector<float> &vec1, const vector<float> &vec2) {
 // Perceptron training function
 void train_perceptron(Perceptron &perceptron, const vector<vector<float>> &X, const vector<int> &Y) {
     int epochs = 0;
+    const int MAX_EPOCHS = 1000; // Prevent infinite loop
     bool converged = false;
 
-    while (!converged) {
-        converged = true; // Assume convergence until a misclassification is found
+    while (!converged && epochs < MAX_EPOCHS) {
+        converged = true; // Assume convergence
         ++epochs;
+
+        int misclassifications = 0; // Track errors in this epoch
 
         for (size_t i = 0; i < X.size(); ++i) {
             // Compute weighted sum + bias
@@ -55,19 +57,36 @@ void train_perceptron(Perceptron &perceptron, const vector<vector<float>> &X, co
             int prediction = activation_function(z);
             int error = Y[i] - prediction;
 
-            if (error != 0) {
-                converged = false; // Mark as not converged if any misclassification occurs
+            if (error != 0) { // Misclassification
+                converged = false; // Mark as not converged
+                ++misclassifications;
 
-                // Update weights and bias
-                for (size_t j = 0; j < perceptron.weights.size(); ++j) {
-                    perceptron.weights[j] += error * X[i][j]; // Adjust weights
+                // Update weights: w <- w + x or w <- w - x
+                if (error == 1) { // Prediction is 0 but should be 1
+                    for (size_t j = 0; j < perceptron.weights.size(); ++j) {
+                        perceptron.weights[j] += X[i][j]; // Add input to weights
+                    }
+                    perceptron.bias += 1; // Increase bias
+                } else if (error == -1) { // Prediction is 1 but should be 0
+                    for (size_t j = 0; j < perceptron.weights.size(); ++j) {
+                        perceptron.weights[j] -= X[i][j]; // Subtract input from weights
+                    }
+                    perceptron.bias -= 1; // Decrease bias
                 }
-                perceptron.bias += error; // Adjust bias
             }
         }
+
+        // Debugging: Print weights, bias, and misclassifications for each epoch
+        cout << "Epoch: " << epochs << ", Misclassifications: " << misclassifications << "\n";
     }
-    cout << "Training complete after " << epochs << " epochs.\n";
+
+    if (epochs >= MAX_EPOCHS) {
+        cout << "Training stopped after reaching the maximum number of epochs.\n";
+    } else {
+        cout << "Training complete after " << epochs << " epochs.\n";
+    }
 }
+
 
 // Main function to model AND gate with perceptron
 int main() {
